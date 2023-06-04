@@ -2,9 +2,10 @@
 pragma solidity ^0.8.9;
 
 // Uncomment this line to use console.log
-// import "hardhat/console.sol";
 
-// import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
+// import "hardhat/console.sol";
 
 contract TimeLock {
     uint256 nextLockId;
@@ -24,7 +25,7 @@ contract TimeLock {
 
     address owner;
 
-    // using Math for uint;
+    using SafeMath for uint;
 
     constructor() {
         owner = msg.sender;
@@ -63,16 +64,21 @@ contract TimeLock {
         require(userLockedFunds[msg.sender].length > 0, "User has no deposit");
         require(checkOwnerId(lockId), "invalid locked account");
         uint256 amount;
-        // if (lockedFunds[lockId].expirationTime < block.timestamp) {
-        //     amount = lockedFunds[lockId].amount;
-        //     amount = amount.tryMul(19).tryDiv(20)
-        // amount -
-        // (amount * (EARLY_WITHDRAWAL_FEE_PERCENTAGE / 100));
-        // } else {
-        //     amount = lockedFunds[lockId].amount;
-        // }
-        amount = lockedFunds[lockId].amount;
+
+        if (block.timestamp > lockedFunds[lockId].expirationTime) {
+            amount = lockedFunds[lockId].amount;
+        } else {
+            amount = lockedFunds[lockId].amount;
+            amount = amount.mul(90).div(100);
+        }
         delete lockedFunds[lockId];
+        for(uint i; i < userLockedFunds[msg.sender].length; i++) {
+            if(lockId == userLockedFunds[msg.sender][i]) {
+                userLockedFunds[msg.sender][i] = userLockedFunds[msg.sender][userLockedFunds[msg.sender].length - 1];
+                userLockedFunds[msg.sender].pop();
+                break;
+            }
+        }
         (bool sent, ) = payable(msg.sender).call{value: amount}("");
         require(sent, "Transaction failed!");
         emit Withdrawal(msg.sender, lockId, amount);
@@ -90,5 +96,13 @@ contract TimeLock {
 
     function getLockedFundData(uint id) public view returns (Lock memory) {
         return lockedFunds[id];
+    }
+
+    function getNumberOfAccounts() external view returns (uint) {
+        return userLockedFunds[msg.sender].length;
+    }
+
+    function test() external view returns (uint[] memory) {
+        return userLockedFunds[msg.sender];
     }
 }
