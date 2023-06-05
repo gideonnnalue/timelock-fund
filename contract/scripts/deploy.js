@@ -5,27 +5,30 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const hre = require("hardhat");
+const fs = require("fs/promises");
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  const TimeLock = await hre.ethers.getContractFactory("TimeLock");
+  const timeLock = await TimeLock.deploy();
 
-  const lockedAmount = hre.ethers.utils.parseEther("0.001");
-
-  const Lock = await hre.ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
-
-  await lock.deployed();
-
-  console.log(
-    `Lock with ${ethers.utils.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
-  );
+  await timeLock.deployed();
+  await writeDeploymentInfo(timeLock, "TimeLock.json")
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
+async function writeDeploymentInfo(contract, filename = "") {
+  const data = {
+    contract: {
+      address: contract.address,
+      signerAddress: contract.signer.address,
+      abi: contract.interface.format(),
+    },
+  };
+
+  const content = JSON.stringify(data, null, 2);
+  await fs.writeFile(`../frontend/src/${filename}`, content, { encoding: "utf-8" });
+}
+
+
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
