@@ -19,3 +19,10 @@ export const getContract = async () => {
   const contract = new ethers.Contract(address, abi, signer);
   return { signer, contract };
 };
+
+export const lockFunds = async (lockContract, {amount, date}) => {
+  const formatedValue = ethers.utils.parseUnits(amount.toString(), 18);
+  console.log("formatted##",formatedValue)
+  const response = await lockContract.deposit(date, {value: formatedValue});
+  return response;
+}

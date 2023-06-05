@@ -20,27 +20,53 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { Formik } from "formik";
-import * as Yup from 'yup';
+import * as Yup from "yup";
+import { toast } from "react-toastify";
 import "react-datepicker/dist/react-datepicker.css";
 
 import DateInput from "./DateInput";
-
+import { lockFunds } from "../utils/contract";
 
 const DepositSchema = Yup.object().shape({
-  amount: Yup.number().min(0.001).required('Required'),
-  date: Yup.date().min(new Date()).required('Required')
-})
+  amount: Yup.number().min(0.001).required("Required"),
+  date: Yup.date().min(new Date(), "Select a later date").required("Required"),
+});
 
-const DepositModal = () => {
+const DepositModal = ({ contract }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const initialRef = useRef(null);
   const finalRef = useRef(null);
 
-  const onSubmit = () => {
-    
+  const onSubmit = async (values, { setSubmitting, resetForm }) => {
+    try {
+      setSubmitting(true);
+      const { amount, date } = values;
+      const timestamp = date.valueOf();
+      const tx = await lockFunds(contract, { amount, date: timestamp });
+      toast.promise(tx.wait, {
+        pending: "Waiting for confirmations",
+        success: "Transaction complete 👌",
+        error: "Transaction rejected 🤯",
+      });
+      resetForm({ amount: "", date: new Date() });
+      toast.success("Transaction Successful", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+      onClose();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setSubmitting(false);
+    }
   };
-
 
   return (
     <>
@@ -79,7 +105,7 @@ const DepositModal = () => {
               handleBlur,
               handleSubmit,
               isSubmitting,
-              setFieldValue
+              setFieldValue,
             }) => (
               <>
                 <ModalBody pb={6}>
@@ -112,7 +138,13 @@ const DepositModal = () => {
                 <ModalFooter>
                   <Flex>
                     <Box>
-                      <Button colorScheme="teal" mr={3} onClick={handleSubmit}>
+                      <Button
+                        colorScheme="teal"
+                        mr={3}
+                        onClick={handleSubmit}
+                        isLoading={isSubmitting}
+                        loadingText="Submitting"
+                      >
                         Lock Funds
                       </Button>
                     </Box>

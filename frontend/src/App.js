@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { extendTheme, ChakraProvider, Container } from "@chakra-ui/react";
+import { ToastContainer } from 'react-toastify';
 import Header from "./components/Header";
 import Main from "./components/Main";
-import { connect, provider } from "./utils/contract";
+import { connect } from "./utils/contract";
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const customTheme = {
   styles: {
@@ -20,16 +23,17 @@ const customTheme = {
 const theme = extendTheme(customTheme);
 
 function App() {
-  const [contractData, setContractData] = useState(null);
+  const [contract, setContract] = useState(null);
   const [connectedAddr, setConnectedAddr] = useState(null);
   const [balance, setBalance] = useState("");
 
   const connectWallet = async () => {
     const { balance, address, contract } = await connect();
-    setContractData(contract);
+    setContract(contract);
     setConnectedAddr(address);
     setBalance(balance);
   };
+
   useEffect(() => {
     connectWallet();
     window.ethereum.on("accountsChanged", () => {
@@ -45,7 +49,8 @@ function App() {
           userBalance={balance}
           connectWallet={connectWallet}
         />
-        <Main />
+        <Main contract={contract} />
+        <ToastContainer />
       </Container>
     </ChakraProvider>
   );
