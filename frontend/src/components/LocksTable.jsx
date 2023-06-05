@@ -9,23 +9,52 @@ import {
   Box,
   Button,
 } from "@chakra-ui/react";
+import { ethers } from "ethers";
+import { useEffect } from "react";
 
-const LocksTable = () => {
+const tableHead = [
+  "Id",
+  "Amount",
+  "Lock Period",
+  "Time Remaining",
+  "Status",
+  "",
+];
+
+const LocksTable = ({ data }) => {
+  useEffect(()=>{
+    console.log(data[0].amount)
+  },[data])
   return (
     <Box height="80px">
       <TableContainer>
         <Table variant="simple">
           <Thead>
             <Tr>
-              <Th textColor="grey">Id</Th>
-              <Th textColor="grey">Amount</Th>
-              <Th textColor="grey">Lock Period</Th>
-              <Th textColor="grey">Status</Th>
-              <Th textColor="grey">Time Remaining</Th>
-              <Th textColor="grey">{}</Th>
+              {tableHead.map((item) => (
+                <Th key={item} textColor="grey">
+                  {item}
+                </Th>
+              ))}
             </Tr>
           </Thead>
           <Tbody>
+            {/* {data.map((item) => {
+              return (
+                <Tr>
+                  <Td>{item.id}</Td>
+                  <Td>0.0001ETH</Td>
+                  <Td>2 days some months</Td>
+                  <Td>30 days</Td>
+                  <Td>Locked</Td>
+                  <Td>
+                    <Button colorScheme="teal" size="sm">
+                      Withdraw
+                    </Button>
+                  </Td>
+                </Tr>
+              );
+            })} */}
             <Tr>
               <Td>001</Td>
               <Td>0.002ETH</Td>

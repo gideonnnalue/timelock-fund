@@ -26,3 +26,8 @@ export const lockFunds = async (lockContract, {amount, date}) => {
   const response = await lockContract.deposit(date, {value: formatedValue});
   return response;
 }
+
+export const getUsersLockedFunds = async (lockContract) => {
+  const response = await lockContract.getUsersLockedFunds();
+  return response;
+}
