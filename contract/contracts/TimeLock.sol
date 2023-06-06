@@ -18,6 +18,7 @@ contract TimeLock {
         uint256 id;
         uint256 amount;
         uint256 expirationTime;
+        uint256 creationDate;
     }
 
     mapping(address => uint[]) userLockedFunds;
@@ -45,7 +46,7 @@ contract TimeLock {
         return false;
     }
 
-    function deposit(uint256 lockPeriod) external payable {
+    function deposit(uint256 lockPeriod, uint256 currentTime) external payable {
         require(msg.value > 0.001 ether, "Deposit a higher amount");
         require(
             lockPeriod > block.timestamp,
@@ -54,6 +55,7 @@ contract TimeLock {
         lockedFunds[nextLockId].id = nextLockId;
         lockedFunds[nextLockId].amount = msg.value;
         lockedFunds[nextLockId].expirationTime = lockPeriod;
+        lockedFunds[nextLockId].creationDate = currentTime;
         userLockedFunds[msg.sender].push(nextLockId);
 
         emit Locked(nextLockId, msg.sender, msg.value);

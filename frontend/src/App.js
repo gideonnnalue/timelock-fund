@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { extendTheme, ChakraProvider, Container } from "@chakra-ui/react";
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer } from "react-toastify";
 import Header from "./components/Header";
 import Main from "./components/Main";
 import { connect } from "./utils/contract";
-import 'react-toastify/dist/ReactToastify.css';
-
+import "react-toastify/dist/ReactToastify.css";
 
 const customTheme = {
   styles: {
@@ -28,10 +27,14 @@ function App() {
   const [balance, setBalance] = useState("");
 
   const connectWallet = async () => {
-    const { balance, address, contract } = await connect();
-    setContract(contract);
-    setConnectedAddr(address);
-    setBalance(balance);
+    try {
+      const { balance, address, contract } = await connect();
+      setContract(contract);
+      setConnectedAddr(address);
+      setBalance(balance);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   useEffect(() => {
@@ -49,7 +52,7 @@ function App() {
           userBalance={balance}
           connectWallet={connectWallet}
         />
-        <Main contract={contract} />
+        {contract && <Main contract={contract} />}
         <ToastContainer />
       </Container>
     </ChakraProvider>

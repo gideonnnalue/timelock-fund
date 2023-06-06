@@ -17,6 +17,7 @@ import {
   FormLabel,
   FormErrorMessage,
   Input,
+  HStack,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { Formik } from "formik";
@@ -26,6 +27,7 @@ import "react-datepicker/dist/react-datepicker.css";
 
 import DateInput from "./DateInput";
 import { lockFunds } from "../utils/contract";
+import dayjs from "dayjs";
 
 const DepositSchema = Yup.object().shape({
   amount: Yup.number().min(0.001).required("Required"),
@@ -42,8 +44,13 @@ const DepositModal = ({ contract }) => {
     try {
       setSubmitting(true);
       const { amount, date } = values;
-      const timestamp = date.valueOf();
-      const tx = await lockFunds(contract, { amount, date: timestamp });
+      const timestamp = dayjs(date).valueOf();
+      const startTime = Date.now();
+      const tx = await lockFunds(contract, {
+        amount,
+        date: timestamp,
+        start: startTime,
+      });
       toast.promise(tx.wait, {
         pending: "Waiting for confirmations",
         success: "Transaction complete 👌",
@@ -70,11 +77,12 @@ const DepositModal = ({ contract }) => {
 
   return (
     <>
-      <Button onClick={onOpen}>
-        <AddIcon boxSize={3} />
-        <Text marginLeft={2}>Lock ETH</Text>
-      </Button>
-
+      <HStack>
+        <Button onClick={onOpen}>
+          <AddIcon boxSize={3} />
+          <Text marginLeft={2}>Lock ETH</Text>
+        </Button>
+      </HStack>
       <Modal
         initialFocusRef={initialRef}
         finalFocusRef={finalRef}

@@ -11,8 +11,9 @@ const getTime = async () => {
 
 const depositParams = async (days, etherAmount) => {
   const timestamp = (await getTime()) + days * 24 * 60 * 60;
+  const start = await getTime();
   const amount = ethers.utils.parseUnits(etherAmount, 18);
-  return { timestamp, amount };
+  return { timestamp, start, amount };
 };
 
 describe("Lock", function () {
@@ -35,20 +36,21 @@ describe("Lock", function () {
 
     describe("Deposit", () => {
       it("Should not deposit less than 0.001 ether", async () => {
-        const { timestamp, amount } = await depositParams(30, "0.0001");
-        await expect(lockContract.deposit(timestamp, { value: amount })).to.be
+        const { timestamp, start, amount } = await depositParams(30, "0.0001");
+        await expect(lockContract.deposit(timestamp, start, { value: amount })).to.be
           .reverted;
       });
       it("Should not deposit in past time", async () => {
-        const { timestamp, amount } = await depositParams(0, "10");
-        await expect(lockContract.deposit(timestamp, { value: amount })).to.be
+        const { timestamp, start, amount } = await depositParams(0, "10");
+        await expect(lockContract.deposit(timestamp, start, { value: amount })).to.be
           .reverted;
       });
       it("Should succesfully deposit and lock funds", async () => {
         const { lockContract, owner } = await loadFixture(deployTimeLock);
-        const { timestamp, amount } = await depositParams(30, "10");
+        const { timestamp, start, amount } = await depositParams(30, "10");
+        console.log(start)
         await expect(
-          lockContract.connect(owner).deposit(timestamp, { value: amount })
+          lockContract.connect(owner).deposit(timestamp, start, { value: amount })
         ).to.emit(lockContract, "Locked");
         const lockedFunds = await lockContract.getUsersLockedFunds();
         expect(lockedFunds[0].amount).to.equal(amount);
@@ -56,23 +58,23 @@ describe("Lock", function () {
       });
       it("Can lock multiple funds", async () => {
         const { lockContract, owner } = await loadFixture(deployTimeLock);
-        const { timestamp, amount } = await depositParams(30, "10");
+        const { timestamp, start, amount } = await depositParams(30, "10");
         await expect(
-          lockContract.connect(owner).deposit(timestamp, { value: amount })
+          lockContract.connect(owner).deposit(timestamp, start, { value: amount })
         ).to.emit(lockContract, "Locked");
         let lockedFunds = await lockContract.getUsersLockedFunds();
         expect(lockedFunds[0].amount).to.equal(amount);
         expect(lockedFunds[0].expirationTime).to.equal(timestamp);
 
         await expect(
-          lockContract.connect(owner).deposit(timestamp, { value: amount })
+          lockContract.connect(owner).deposit(timestamp, start, { value: amount })
         ).to.emit(lockContract, "Locked");
         lockedFunds = await lockContract.getUsersLockedFunds();
         expect(lockedFunds[1].amount).to.equal(amount);
         expect(lockedFunds[1].expirationTime).to.equal(timestamp);
         
         await expect(
-          lockContract.connect(owner).deposit(timestamp, { value: amount })
+          lockContract.connect(owner).deposit(timestamp, start, { value: amount })
         ).to.emit(lockContract, "Locked");
         lockedFunds = await lockContract.getUsersLockedFunds();
         expect(lockedFunds[2].amount).to.equal(amount);
@@ -91,17 +93,17 @@ describe("Lock", function () {
         const { lockContract, owner, acct1 } = await loadFixture(
           deployTimeLock
         );
-        const { timestamp, amount } = await depositParams(30, "10");
-        await lockContract.connect(owner).deposit(timestamp, { value: amount });
+        const { timestamp, start, amount } = await depositParams(30, "10");
+        await lockContract.connect(owner).deposit(timestamp, start, { value: amount });
         await expect(lockContract.connect(acct1).withdraw(1)).to.be.reverted;
       });
       it("Should withdraw 90% of funds if requested before expiring", async () => {
         const { lockContract, owner, acct1 } = await loadFixture(
           deployTimeLock
         );
-        const { timestamp, amount } = await depositParams(30, "100");
+        const { timestamp, start, amount } = await depositParams(30, "100");
         const fineAmount = ethers.utils.parseUnits("90", 18);
-        await lockContract.connect(acct1).deposit(timestamp, { value: amount });
+        await lockContract.connect(acct1).deposit(timestamp, start, { value: amount });
         await expect(
           lockContract.connect(acct1).withdraw(1)
         ).to.changeEtherBalances([lockContract, acct1], [`-${fineAmount}`, fineAmount]);
@@ -110,8 +112,8 @@ describe("Lock", function () {
         const { lockContract, owner, acct1 } = await loadFixture(
           deployTimeLock
         );
-        const { timestamp, amount } = await depositParams(30, "100");
-        await lockContract.connect(acct1).deposit(timestamp, { value: amount });
+        const { timestamp, start, amount } = await depositParams(30, "100");
+        await lockContract.connect(acct1).deposit(timestamp, start, { value: amount });
         await ethers.provider.send("evm_mine", [(await getTime()) * 3600]);
         await expect(
           lockContract.connect(acct1).withdraw(1)
@@ -121,23 +123,23 @@ describe("Lock", function () {
     describe("Transactions", () => {
       it("Should reflect the correct account information after transactions", async () => {
         const { lockContract, owner } = await loadFixture(deployTimeLock);
-        const { timestamp, amount } = await depositParams(30, "100");
+        const { timestamp, start, amount } = await depositParams(30, "100");
         await expect(
-          lockContract.connect(owner).deposit(timestamp, { value: amount })
+          lockContract.connect(owner).deposit(timestamp, start, { value: amount })
         ).to.emit(lockContract, "Locked");
         let lockedFunds = await lockContract.getUsersLockedFunds();
         expect(lockedFunds[0].amount).to.equal(amount);
         expect(lockedFunds[0].expirationTime).to.equal(timestamp);
 
         await expect(
-          lockContract.connect(owner).deposit(timestamp, { value: amount })
+          lockContract.connect(owner).deposit(timestamp, start, { value: amount })
         ).to.emit(lockContract, "Locked");
         lockedFunds = await lockContract.getUsersLockedFunds();
         expect(lockedFunds[1].amount).to.equal(amount);
         expect(lockedFunds[1].expirationTime).to.equal(timestamp);
         
         await expect(
-          lockContract.connect(owner).deposit(timestamp, { value: amount })
+          lockContract.connect(owner).deposit(timestamp, start, { value: amount })
         ).to.emit(lockContract, "Locked");
         lockedFunds = await lockContract.getUsersLockedFunds();
         expect(lockedFunds[2].amount).to.equal(amount);

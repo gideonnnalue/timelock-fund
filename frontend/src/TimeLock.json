@@ -1,15 +1,15 @@
 {
   "contract": {
-    "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
     "signerAddress": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
     "abi": [
       "constructor()",
       "event Locked(uint256 indexed id, address indexed owner, uint256 amount)",
       "event Withdrawal(address indexed owner, uint256 indexed lockId, uint256 amount)",
-      "function deposit(uint256 lockPeriod) payable",
-      "function getLockedFundData(uint256 id) view returns (tuple(uint256 id, uint256 amount, uint256 expirationTime))",
+      "function deposit(uint256 lockPeriod, uint256 currentTime) payable",
+      "function getLockedFundData(uint256 id) view returns (tuple(uint256 id, uint256 amount, uint256 expirationTime, uint256 creationDate))",
       "function getNumberOfAccounts() view returns (uint256)",
-      "function getUsersLockedFunds() view returns (tuple(uint256 id, uint256 amount, uint256 expirationTime)[])",
+      "function getUsersLockedFunds() view returns (tuple(uint256 id, uint256 amount, uint256 expirationTime, uint256 creationDate)[])",
       "function test() view returns (uint256[])",
       "function withdraw(uint256 lockId)"
     ]

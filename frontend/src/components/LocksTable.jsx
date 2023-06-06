@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Table,
   Thead,
@@ -8,9 +9,12 @@ import {
   TableContainer,
   Box,
   Button,
+  Text,
 } from "@chakra-ui/react";
 import { ethers } from "ethers";
-import { useEffect } from "react";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 
 const tableHead = [
   "Id",
@@ -21,10 +25,59 @@ const tableHead = [
   "",
 ];
 
-const LocksTable = ({ data }) => {
-  useEffect(()=>{
-    console.log(data[0].amount)
-  },[data])
+const LocksTable = ({ data, onWithdraw }) => {
+  const isLocked = (column) => {
+    return column.expirationTime - column.creationDate > 0;
+  };
+  const toEther = (value) => {
+    return ethers.utils.formatEther(value);
+  };
+  const getLockPeriod = (from, to) => {
+    const startDate = new Date(Number(from));
+    const endDate = new Date(Number(to));
+    return dayjs(endDate).from(startDate, true);
+  };
+  const getRemainingTime = (endDate) => {
+    const date = new Date(Number(endDate));
+    return dayjs(date).fromNow(true);
+  };
+  const getStatusText = (column) => {
+    if (isLocked(column)) {
+      return <Text color="red">Locked</Text>;
+    } else {
+      return <Text color="green">Unlocked</Text>;
+    }
+  };
+
+  const onSubmitWithdrawal = (column) => {
+    onWithdraw(column.id.toString(), toEther(column.amount), isLocked(column));
+  };
+  const getColumnData = (column) => {
+    return (
+      <Tr key={column.id.toString()}>
+        <Td>{column.id.toString().padStart(3,"0")}</Td>
+        <Td>{toEther(column.amount)}ETH</Td>
+        <Td>
+          {getLockPeriod(
+            column.creationDate.toString(),
+            column.expirationTime.toString()
+          )}
+        </Td>
+        <Td>{getRemainingTime(column.expirationTime.toString())}</Td>
+        <Td>{getStatusText(column)}</Td>
+        <Td>
+          <Button
+            colorScheme={isLocked(column) ? "red" : "teal"}
+            size="sm"
+            onClick={() => onSubmitWithdrawal(column)}
+          >
+            Withdraw
+          </Button>
+        </Td>
+      </Tr>
+    );
+  };
+
   return (
     <Box height="80px">
       <TableContainer>
@@ -39,82 +92,9 @@ const LocksTable = ({ data }) => {
             </Tr>
           </Thead>
           <Tbody>
-            {/* {data.map((item) => {
-              return (
-                <Tr>
-                  <Td>{item.id}</Td>
-                  <Td>0.0001ETH</Td>
-                  <Td>2 days some months</Td>
-                  <Td>30 days</Td>
-                  <Td>Locked</Td>
-                  <Td>
-                    <Button colorScheme="teal" size="sm">
-                      Withdraw
-                    </Button>
-                  </Td>
-                </Tr>
-              );
-            })} */}
-            <Tr>
-              <Td>001</Td>
-              <Td>0.002ETH</Td>
-              <Td>2 days 15 hours</Td>
-              <Td>30 days</Td>
-              <Td textColor="red">Locked</Td>
-              <Td>
-                <Button colorScheme="red" size="sm">
-                  Withdraw
-                </Button>
-              </Td>
-            </Tr>
-            <Tr>
-              <Td>002</Td>
-              <Td>0.01ETH</Td>
-              <Td>6 days 10 hours</Td>
-              <Td>30 days</Td>
-              <Td textColor="red">Locked</Td>
-              <Td>
-                <Button colorScheme="red" size="sm">
-                  Withdraw
-                </Button>
-              </Td>
-            </Tr>
-            <Tr>
-              <Td>001</Td>
-              <Td>0.00022ETH</Td>
-              <Td>2 days 15 hours</Td>
-              <Td>12 days</Td>
-              <Td textColor="red">Locked</Td>
-              <Td>
-                <Button colorScheme="red" size="sm">
-                  Withdraw
-                </Button>
-              </Td>
-            </Tr>
-            <Tr>
-              <Td>001</Td>
-              <Td>0.009ETH</Td>
-              <Td>0 days</Td>
-              <Td>30 days</Td>
-              <Td>Unlocked</Td>
-              <Td>
-                <Button colorScheme="teal" size="sm">
-                  Withdraw
-                </Button>
-              </Td>
-            </Tr>
-            <Tr>
-              <Td>001</Td>
-              <Td>0.002ETH</Td>
-              <Td>0 days</Td>
-              <Td>30 days</Td>
-              <Td>Unlocked</Td>
-              <Td>
-                <Button colorScheme="teal" size="sm">
-                  Withdraw
-                </Button>
-              </Td>
-            </Tr>
+            {data.map((item) => {
+              return getColumnData(item);
+            })}
           </Tbody>
         </Table>
       </TableContainer>
