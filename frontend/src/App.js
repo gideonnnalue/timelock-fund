@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { extendTheme, ChakraProvider, Container } from "@chakra-ui/react";
+import { extendTheme, ChakraProvider, Container, Text, Box} from "@chakra-ui/react";
 import { ToastContainer } from "react-toastify";
 import Header from "./components/Header";
 import Main from "./components/Main";
@@ -52,6 +52,7 @@ function App() {
           userBalance={balance}
           connectWallet={connectWallet}
         />
+        <Box marginTop={1}>Works only on <Text as="b">Avalanchi Fuji C-Chain test net</Text></Box>
         {contract && <Main contract={contract} />}
         <ToastContainer />
       </Container>
