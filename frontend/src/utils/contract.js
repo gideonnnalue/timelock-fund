@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import contractData from "../TimeLock.json";
 
-const address = contractData.contract.address;
+const address = process.env.REACT_APP_CONTRACT_ADDRESS || contractData.contract.address;
 const abi = contractData.contract.abi;
 
 export const provider = new ethers.providers.Web3Provider(window.ethereum);
